@@ -38,6 +38,10 @@ export interface ReviewStore {
   listBatchLatest(batchId: string): EstimateVersion[];
   setStatus(key: string, version: number, status: VersionStatus, event: string, notes?: string): void;
   events(key: string): ReviewEvent[];
+  /** The oldest queued batch item (older batches first, then in batch order), or null. */
+  nextQueued(): { batchId: string; issueKey: string; notes: string | null } | null;
+  /** Puts items left RUNNING by a crash or restart back in the queue; returns how many. */
+  resetRunning(): number;
 }
 
 interface Row {
@@ -89,6 +93,10 @@ export function openReviewStore(db: Database.Database): ReviewStore {
     ORDER BY v.issue_key`);
   const setStatusStmt = db.prepare('UPDATE estimate_versions SET status = ? WHERE issue_key = ? AND version = ?');
   const insertEvent = db.prepare('INSERT INTO review_events (issue_key, version, event, notes, at) VALUES (?, ?, ?, ?, ?)');
+  const nextQueuedStmt = db.prepare(`
+    SELECT i.batch_id, i.issue_key, i.notes FROM batch_items i JOIN batches b ON b.id = i.batch_id
+    WHERE i.state = 'QUEUED' ORDER BY b.rowid, i.seq LIMIT 1`);
+  const resetRunningStmt = db.prepare("UPDATE batch_items SET state = 'QUEUED' WHERE state = 'RUNNING'");
   const eventsStmt = db.prepare('SELECT id, issue_key, version, event, notes, at FROM review_events WHERE issue_key = ? ORDER BY id');
 
   const addVersionTx = db.transaction((v: NewVersion): EstimateVersion => {
@@ -125,6 +133,11 @@ export function openReviewStore(db: Database.Database): ReviewStore {
     listVersions: key => (listAll.all(key) as Row[]).map(toVersion),
     listBatchLatest: batchId => (batchLatest.all(batchId) as Row[]).map(toVersion),
     setStatus: (key, version, status, event, notes) => setStatusTx(key, version, status, event, notes),
+    nextQueued: () => {
+      const r = nextQueuedStmt.get() as { batch_id: string; issue_key: string; notes: string | null } | undefined;
+      return r ? { batchId: r.batch_id, issueKey: r.issue_key, notes: r.notes } : null;
+    },
+    resetRunning: () => resetRunningStmt.run().changes,
     events: key => (eventsStmt.all(key) as { id: number; issue_key: string; version: number; event: string; notes: string | null; at: string }[])
       .map(r => ({ id: r.id, issueKey: r.issue_key, version: r.version, event: r.event, notes: r.notes, at: r.at })),
   };

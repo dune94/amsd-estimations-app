@@ -68,6 +68,27 @@ describe('review store', () => {
     expect(second.getVersion('K-1')?.version).toBe(1);
   });
 
+  it('returns the oldest queued item first, and null when nothing is queued', () => {
+    const { rs } = store();
+    const b1 = rs.createBatch(['K-1', 'K-2'], 'keys');
+    const b2 = rs.createBatch(['K-3'], 'keys');
+    expect(rs.nextQueued()).toEqual({ batchId: b1, issueKey: 'K-1', notes: null });
+    rs.setItemState(b1, 'K-1', 'DONE');
+    expect(rs.nextQueued()?.issueKey).toBe('K-2');
+    rs.setItemState(b1, 'K-2', 'RUNNING');
+    expect(rs.nextQueued()).toEqual({ batchId: b2, issueKey: 'K-3', notes: null });
+    rs.setItemState(b2, 'K-3', 'FAILED');
+    expect(rs.nextQueued()).toBeNull();
+  });
+
+  it('puts running items back in the queue and says how many', () => {
+    const { rs } = store();
+    const b = rs.createBatch(['K-1', 'K-2', 'K-3'], 'keys');
+    rs.setItemState(b, 'K-1', 'RUNNING'); rs.setItemState(b, 'K-2', 'RUNNING'); rs.setItemState(b, 'K-3', 'DONE');
+    expect(rs.resetRunning()).toBe(2);
+    expect(rs.batchItems(b).map(i => i.state)).toEqual(['QUEUED', 'QUEUED', 'DONE']);
+  });
+
   it('leaves the legacy estimates table untouched', () => {
     const { est } = store();
     est.saveEstimate({ issueKey: 'K-1', generatedAt: '2026-10-20T00:00:00Z' } as never);
