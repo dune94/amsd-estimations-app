@@ -1,0 +1,16 @@
+{
+  "name": "amsd-estimations-app",
+  "version": "0.1.0",
+  "description": "Installer for amsd-estimations-app. Clones the project from a git URL you give with --repo, sets up its environment, copies your .env values in and runs its tests. The project code is not in this package.",
+  "bin": {
+    "amsd-estimations-app": "bin/estimations-app.cjs"
+  },
+  "files": [
+    "bin/",
+    "install.sh"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

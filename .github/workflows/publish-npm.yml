@@ -1,0 +1,83 @@
+name: Publish amsd-estimations-app to npm
+
+# Fires on any version tag push (the same v* tags install.sh --ref already expects to find), plus
+# a manual dispatch so a tag pushed BEFORE this workflow existed (it will not retroactively fire)
+# can still be published once, by hand, from the Actions tab.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'npm version to publish (e.g. 1.9.0, no leading v)'
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Set package version from the trigger
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          # npm requires full x.y.z semver
+          # and rejects anything else outright ("Invalid version: 1.10"). Pad a bare x.y to x.y.0
+          # rather than requiring every future tag to change shape just for this workflow.
+          case "$VERSION" in
+            *.*.*) : ;;
+            *.*) VERSION="${VERSION}.0" ;;
+          esac
+          npm --prefix npm-package/estimations-app version "$VERSION" --no-git-tag-version --allow-same-version
+
+      # A TAG THAT MOVES MUST NOT GO RED. npm versions are immutable, so re-pushing a tag (a
+      # release re-cut, a corrected commit) fires this workflow again and `npm publish` fails
+      # with E403 "cannot publish over the previously published versions". That failure says
+      # nothing is wrong — but a publish job that goes red for a non-problem trains everyone to
+      # ignore a red publish job, which is how a REAL failure gets missed. Already-published is
+      # reported and skipped; anything else still fails the job.
+      - name: Publish
+        working-directory: npm-package/estimations-app
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          NAME="$(node -p "require('./package.json').name")"
+          if npm view "${NAME}@${VERSION}" version >/dev/null 2>&1; then
+            echo "::notice::${NAME}@${VERSION} is already on the registry — nothing to publish."
+            echo "A published version is immutable; publish a new version to ship changes."
+            exit 0
+          fi
+          # THE REGISTRY IS THE VERDICT, NOT npm's EXIT CODE. A version another publisher has
+          # just uploaded is invisible to `npm view` while npm processes it, and publishing over
+          # it fails E409 "previously staged" (every release 2.0.65-2.0.73 went red this way
+          # with the package correctly on the registry). So a failed publish is judged by what
+          # the registry holds once it settles: this version, built from this commit, is green;
+          # a different commit under this version, or no version at all, is red.
+          if npm publish --access public; then exit 0; fi
+          for _i in $(seq 1 24); do
+            HEAD_ON_REGISTRY="$(npm view "${NAME}@${VERSION}" gitHead 2>/dev/null || true)"
+            if [ -n "$HEAD_ON_REGISTRY" ]; then
+              if [ "$HEAD_ON_REGISTRY" = "$GITHUB_SHA" ]; then
+                echo "::notice::${NAME}@${VERSION} is on the registry from this commit (${GITHUB_SHA}) — published by another publisher."
+                exit 0
+              fi
+              echo "::error::${NAME}@${VERSION} is on the registry from ${HEAD_ON_REGISTRY}, not this commit ${GITHUB_SHA}."
+              exit 1
+            fi
+            sleep 10
+          done
+          echo "::error::npm publish failed and ${NAME}@${VERSION} never appeared on the registry."
+          exit 1
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
