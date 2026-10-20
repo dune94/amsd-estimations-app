@@ -1,0 +1,21 @@
+{
+  "story_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "key": "KEY-1",
+  "title": "Sample story",
+  "required": ["site-a"],
+  "alternatives": [],
+  "blast_required": {"base": 22, "upper": 26, "by_codeline": {"site-a": 22}},
+  "planning": {
+    "base_br": 22, "upper_br": 26, "planning_br": 31, "c_count": 2, "r_count": 0,
+    "scope": "High", "complexity": "High", "risk": "Low", "planning_sp": 5, "sp_as_measured": 5,
+    "pert": {"o_br": 22, "m_br": 31, "p_br": 36, "expected_br": 30, "o_sp": 5, "m_sp": 5, "p_sp": 5, "expected_sp": 5}
+  },
+  "pert": {"o_br": 22, "m_br": 31, "p_br": 36, "expected_br": 30, "o_sp": 5, "m_sp": 5, "p_sp": 5, "expected_sp": 5},
+  "drivers": {
+    "complexity": [{"driver": 2, "name": "Three or more rules", "date": "2026-10-01", "source": "comment", "quote": "three or more rules apply here"}],
+    "risk": [], "dropped": [], "c_count": 2, "r_count": 0
+  },
+  "inputs": {"comments": 1, "remote_links": [], "attachments_read": [], "attachments_not_read": [], "confluence_read": [], "confluence_not_read": []},
+  "flags": [],
+  "codelines": {}
+}
