@@ -6,14 +6,16 @@ import type { JiraClient } from './clients/types.js';
 import { baselineStories, confidenceConfig } from './config/index.js';
 import type { EstimatesDb } from './db/index.js';
 import { openReviewStore, type ReviewStore } from './db/reviewStore.js';
+import { renderReviewPage } from './reporting/reviewPage.js';
 import type { FormulaHooks } from './routes/index.js';
 import { createScopeRunner } from './scope/scopeRunner.js';
 import { createBatchWorker, type BatchWorker } from './service/batchWorker.js';
 import type { EstimationService } from './service/estimationService.js';
 import { createFormulaEstimator } from './service/formulaEstimator.js';
+import { createOutputs, type Outputs } from './service/outputs.js';
 import { createReviewService, type ReviewService } from './service/reviewService.js';
 
-export interface Pipeline { worker: BatchWorker; review: ReviewService; store: ReviewStore; formula: FormulaHooks }
+export interface Pipeline { worker: BatchWorker; review: ReviewService; store: ReviewStore; formula: FormulaHooks; outputs: Outputs }
 
 export function buildPipeline(deps: { env: NodeJS.ProcessEnv; jira: JiraClient; estimation: EstimationService; db: EstimatesDb }): Pipeline | null {
   const { env } = deps;
@@ -43,5 +45,10 @@ export function buildPipeline(deps: { env: NodeJS.ProcessEnv; jira: JiraClient; 
     createBatch: (keys, source) => worker.createBatch(keys, source),
     searchKeys: async jql => (await deps.jira.searchByJql(jql, 100)).map(i => i.key),
   };
-  return { worker, review, store, formula };
+  // No writer is passed: Jira and Confluence stay read-only, so publishing is always a dry run until a writer is added on purpose.
+  const outputs = createOutputs({
+    store, env,
+    render: v => ({ title: `Estimate: ${v.issueKey}`, html: renderReviewPage(v.batchId ?? '', [{ version: v, history: store.listVersions(v.issueKey) }]) }),
+  });
+  return { worker, review, store, formula, outputs };
 }

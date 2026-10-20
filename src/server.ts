@@ -7,6 +7,7 @@ import { createConfluenceClient, createJiraClient } from './clients/index.js';
 import { openDb } from './db/index.js';
 import { createAnthropicLlmEstimator, createClaudeCliLlmEstimator, type LlmEstimator } from './engine/llmEngine.js';
 import { registerRoutes } from './routes/index.js';
+import { registerOutputRoutes } from './routes/outputs.js';
 import { registerReviewRoutes } from './routes/review.js';
 import { buildPipeline } from './pipeline.js';
 import { createEstimationService } from './service/estimationService.js';
@@ -43,6 +44,7 @@ async function main() {
   registerRoutes(app, service, pipeline?.formula);
   if (pipeline) {
     registerReviewRoutes(app, { worker: pipeline.worker, review: pipeline.review, store: pipeline.store, jira });
+    registerOutputRoutes(app, pipeline.outputs);
     pipeline.worker.start(); // resumes any batch interrupted by a restart
   }
 
