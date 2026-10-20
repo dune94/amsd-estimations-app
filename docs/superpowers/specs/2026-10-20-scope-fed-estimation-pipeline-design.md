@@ -1,6 +1,6 @@
 # Formula-driven estimation pipeline — design
 
-Status: DRAFT for approval. Backlog item EST-BL-001. Written 2026-10-20, revised after the owner interview. Marks: **[decided]** = said or approved by the owner; **[my call]** = a choice made here that the owner has not confirmed.
+Status: APPROVED 2026-10-20; implemented on branch `feat/formula-pipeline` (plan: `docs/superpowers/plans/2026-10-20-formula-driven-estimation-pipeline.md`). Backlog item EST-BL-001. Written 2026-10-20, revised after the owner interview. Marks: **[decided]** = said or approved by the owner; **[my call]** = a choice made here that the owner has not confirmed.
 
 ## 1. Intent and why
 

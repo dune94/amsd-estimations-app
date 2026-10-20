@@ -190,6 +190,30 @@ npm test
 
 ---
 
+## Formula pipeline (optional)
+
+With `ESTIMATION_MODE=formula` (or `"mode": "formula"` in a request), a story is estimated by the **scope engine**, a separate project that measures the
+code and applies the Scope + Complexity + Risk formula. Its result *is* the estimate: SP and a PERT range (optimistic / most likely / pessimistic) are copied,
+never recomputed. The previous engine stays available with `legacy`, the default; nothing changes unless the pipeline is switched on. Set `SCOPE_HOME`
+(the installed scope engine folder) and `SCOPE_BOUNDED` (the memory-cap wrapper) to enable it.
+
+**Flow.** `POST /batches` (`{ "keys": [...] }` or `{ "jql": "..." }`) queues stories; they run one at a time. Each result is stored as a numbered draft
+version with its measured facts, drivers (each with a quoted line), the inputs that could not be read, and a **confidence** reading. `GET /review/<batchId>`
+is the review page: accept a story, accept all High-confidence stories, or send one story or the whole batch back with notes (they are added to the
+story and it is re-run as the next version; earlier versions are kept). Only an accepted estimate can be presented (`POST /estimates/<key>/present`).
+`POST /estimates/<key>/publish` is a dry run unless the request says `"dryRun": false` **and** `OUTPUTS_ENABLED` is exactly `true` **and** a writer is configured;
+none is, so Jira and Confluence stay read-only.
+
+**Confidence** is High, Medium or Low, with reasons. Missing acceptance criteria, no code facts, or most attachments unread give Low. Ambiguous criteria,
+some attachments unread, dropped drivers, too few delivered baselines at the same levels, a wide BASE-to-UPPER range, or an estimate far from similar
+delivered stories are minor reasons: one or two give Medium, three or more give Low. Thresholds are in `src/config/confidence.json`.
+
+**Baselines.** Delivered stories with measured facts are used as evidence, not to set the number: how many sit at the same levels, what they came to,
+and the closest by blast radius. `npm run build-measured-baselines -- <calibration.json> <baselines.json> <out.json>` adds measured facts to baselines;
+`npm run learn -- <delivered.json> <baselines.json> <out.json>` proposes new rows for review (it never changes the baselines);
+`npm run backtest -- <rows.json>` compares the pipeline's forecast with the formula applied to the delivered change and exits 1 when the share within one
+SP band is below `src/config/backtest.json` (`minShare`).
+
 ## Architecture
 
 ```
@@ -204,7 +228,8 @@ src/
 │   └── types.ts
 ├── clients/          # Jira + Confluence clients (mock & live)
 ├── db/               # SQLite persistence (better-sqlite3, WAL mode)
-├── service/          # Orchestration layer
+├── service/          # Orchestration layer (estimation, formula estimator, review, batch worker, outputs)
+├── scope/            # Scope engine runner and story-pack helper
 ├── routes/           # Fastify route handlers
 ├── reporting/        # Confluence page + Jira comment renderers
 ├── config/           # thresholds.json, baseline-stories.json
