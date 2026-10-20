@@ -127,3 +127,4 @@ export const classificationSignals = load<ClassificationSignalsConfig>(
   'classification-signals.json',
 );
 export const confidenceConfig = load<ConfidenceConfig>('confidence.json');
+export const backtestConfig = load<{ minShare: number }>('backtest.json');

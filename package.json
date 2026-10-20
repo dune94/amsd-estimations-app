@@ -10,7 +10,10 @@
     "dev": "tsx watch src/server.ts",
     "export-html": "tsx src/scripts/exportHtml.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build-measured-baselines": "tsx src/scripts/buildMeasuredBaselines.ts",
+    "learn": "tsx src/scripts/learn.ts",
+    "backtest": "tsx src/scripts/backtest.ts"
   },
   "engines": {
     "node": ">=20"
