@@ -1,0 +1,8 @@
+{
+  "minSupport": 3,
+  "maxRange": 3,
+  "bandDistance": 1,
+  "majorUnreadShare": 0.5,
+  "minorLowThreshold": 3,
+  "bands": [1, 2, 3, 5, 8, 13]
+}

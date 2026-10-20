@@ -53,6 +53,35 @@ export interface BaselineStory {
     filesImpacted: number;
     newComponent: boolean;
   };
+  /** Measured code facts and drivers, present for baselines built from delivered, measured work. */
+  measured?: {
+    changed: number;
+    dependent: number;
+    tests: number;
+    external: number;
+    newFiles: number;
+    blastRadius: number;
+    scope: string;
+    complexity: string;
+    risk: string;
+    cDrivers: number;
+    rDrivers: number;
+  };
+}
+
+export interface ConfidenceConfig {
+  /** Delivered baselines needed at the same Scope/Complexity/Risk levels before the support counts as solid. */
+  minSupport: number;
+  /** UPPER more than this many times BASE is flagged as a wide range. */
+  maxRange: number;
+  /** Largest allowed distance, in SP bands, between the estimate and the observed median. */
+  bandDistance: number;
+  /** Share of attachments not read at or above which confidence is Low. */
+  majorUnreadShare: number;
+  /** This many minor reasons or more give Low. */
+  minorLowThreshold: number;
+  /** The SP scale used for band maths. */
+  bands: number[];
 }
 
 export interface ThresholdsConfig {
@@ -97,3 +126,4 @@ export const thresholds = load<ThresholdsConfig>('thresholds.json');
 export const classificationSignals = load<ClassificationSignalsConfig>(
   'classification-signals.json',
 );
+export const confidenceConfig = load<ConfidenceConfig>('confidence.json');
