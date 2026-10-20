@@ -12,3 +12,4 @@ data/
 *.bak
 *.bak-*
 .pytest_cache/
+.install-marker

@@ -1,0 +1,26 @@
+#!/bin/bash
+# bounded [--want <MB>] -- <command...>
+#
+# The ONLY sanctioned way to launch anything heavy from a Claude session on this host.
+# The cap is derived from what the HOST can spare right now, never from what the job wants:
+#   cap = min(want, available - RESERVE)   and the job is refused outright if cap < FLOOR.
+# Two WSL restarts on 2026-09-11 came from MemoryMax values (12G, 6G) chosen against a 13G host
+# that already held ~6G. A cap the host cannot honour is not a cap.
+RESERVE_MB=${BOUNDED_RESERVE_MB:-3072}   # always leave the host this much
+FLOOR_MB=${BOUNDED_FLOOR_MB:-1536}       # below this the job does not run
+WANT_MB=4096
+if [ "${1:-}" = "--want" ]; then WANT_MB="$2"; shift 2; fi
+[ "${1:-}" = "--" ] && shift
+[ $# -gt 0 ] || { echo "bounded: no command" >&2; exit 64; }
+
+AVAIL_MB=$(awk '/MemAvailable/ {print int($2/1024)}' /proc/meminfo)
+HEADROOM_MB=$(( AVAIL_MB - RESERVE_MB ))
+if [ "$HEADROOM_MB" -lt "$FLOOR_MB" ]; then
+  echo "bounded: REFUSED — host has ${AVAIL_MB}MB available, reserve ${RESERVE_MB}MB leaves ${HEADROOM_MB}MB, floor is ${FLOOR_MB}MB." >&2
+  echo "bounded: free memory (stop stacks / batch smaller) before running this." >&2
+  exit 75
+fi
+CAP_MB=$HEADROOM_MB
+[ "$CAP_MB" -gt "$WANT_MB" ] && CAP_MB=$WANT_MB
+echo "bounded: cap=${CAP_MB}MB (host available ${AVAIL_MB}MB, reserve ${RESERVE_MB}MB, wanted ${WANT_MB}MB)" >&2
+exec systemd-run --user --scope --quiet -p MemoryMax="${CAP_MB}M" -p MemorySwapMax=0 "$@"
