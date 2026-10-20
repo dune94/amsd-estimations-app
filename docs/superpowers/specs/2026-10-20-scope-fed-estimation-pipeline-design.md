@@ -49,7 +49,7 @@ Anti-goals (a failure even if it technically works)
 `ESTIMATION_MODE=legacy|formula` (app-wide) and a per-request `mode` **[my call]**. `legacy` = today's engine, unchanged. `formula` = this pipeline. The default stays `legacy` until the owner changes it **[my call]**.
 
 ### 4.2 Stage 1 — Intake
-Input: a Jira key, or a JQL query (a batch with an id). Output: a **story pack**: title, description, acceptance criteria, comments, attachment text and images, linked-page text, read-only, saved with a content hash. A changed hash on re-run means the ticket changed.
+Input: a Jira key, or a JQL query (a batch with an id). Output: a **story pack**: title, description, acceptance criteria, comments, attachment text and images, linked-page text, read-only, saved with a content hash. The scope engine builds the pack (`--build-pack`), because it already reads attachments and linked pages; the app stores it and does not duplicate that code **[my call, made in the plan]**. A re-run rebuilds the pack from Jira and adds the reviewer's notes; the stored hash shows whether the ticket changed since the previous version.
 
 ### 4.3 Stage 2 — Scope run
 The app writes the story pack to a file and runs the scope engine as a command (`SCOPE_HOME` points at its installed folder) with `--story-pack <file>`, under the memory cap, with a timeout from configuration, and reads its `result.json`. Both stages therefore see exactly the same text, including any reviewer notes **[my call]**.
@@ -90,7 +90,8 @@ Present: accepted estimates only (card, report, SP and range, confidence, versio
 A command takes delivered stories, measures the real blast radius from their commits with the scope engine's measure, compares with the forecast and the accepted SP, and writes proposed new measured baseline rows for review. It never changes the baselines on its own.
 
 ### 4.12 Changes needed in the scope engine (a dependency)
-- `--story-pack <file>`: use the supplied story pack (title, text, image paths) instead of fetching from Jira; the fetch path stays the default.
+- `--build-pack <dir>`: read the ticket (as today) and write the story pack to the folder; no agents are run.
+- `--story-pack <file>`: use the supplied story pack (title, text, image paths) instead of fetching from Jira; the fetch path stays the default. The pack's folder is the agents' working directory and is never deleted by the run.
 - `result.json` gets `schema_version`, `story_hash`, and the PERT range as a named block (today it is under `planning.pert`).
 - Optional later: `--as-of <date>` (scope backlog SC-BL-001). Not required by this design.
 These are tracked in the scope engine's own backlog and built and tested there first.
