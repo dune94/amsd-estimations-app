@@ -6,6 +6,8 @@ import type { ReviewStore } from '../db/reviewStore.js';
 import type { FormulaEstimator } from './formulaEstimator.js';
 import { ValidationError } from './reviewService.js';
 
+const ISSUE_KEY = /^[A-Z][A-Z0-9_]*-\d+$/;
+
 export interface BatchProgress { total: number; queued: number; done: number; failed: number; running: string | null }
 
 export interface BatchWorker {
@@ -45,6 +47,8 @@ export function createBatchWorker(deps: { store: ReviewStore; estimator: Formula
 
   return {
     createBatch(keys, source) {
+      const bad = keys.find(k => !ISSUE_KEY.test(k));
+      if (bad !== undefined) throw new ValidationError(`"${bad}" is not an issue key (expected something like ABC-123)`);
       if (keys.length === 0) throw new ValidationError('a batch needs at least one story');
       if (new Set(keys).size !== keys.length) throw new ValidationError('a batch cannot contain the same story twice');
       if (keys.length > deps.maxBatchSize) throw new ValidationError(`a batch can have at most ${deps.maxBatchSize} stories`);

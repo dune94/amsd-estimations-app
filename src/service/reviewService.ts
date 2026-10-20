@@ -50,17 +50,20 @@ export function createReviewService(deps: ReviewServiceDeps): ReviewService {
     return text;
   }
 
-  /** Earlier notes (from earlier versions) plus the new ones, because every re-run rebuilds the pack from the ticket. */
-  function accumulated(key: string, notes: string): string {
-    const earlier = store.listVersions(key).map(v => v.notes).filter((n): n is string => !!n);
-    return [...earlier, notes].join('\n\n');
+  /**
+   * The notes for the re-run: what the version being sent back already carried (each version stores the full set it ran with)
+   * plus the new note, because every re-run rebuilds the pack from the ticket. Over the limit, the oldest text is dropped.
+   */
+  function accumulated(v: EstimateVersion, notes: string): string {
+    const all = [v.notes, notes].filter((n): n is string => !!n).join('\n\n');
+    return all.length > deps.maxNotesChars ? all.slice(-deps.maxNotesChars) : all;
   }
 
   function sendBackOne(v: EstimateVersion, notes: string): void {
     const batchId = v.batchId ?? store.createBatch([v.issueKey], 'send-back');
     store.setStatus(v.issueKey, v.version, 'SENT_BACK', 'send_back', notes);
     store.setItemState(batchId, v.issueKey, 'QUEUED', notes);
-    deps.enqueue(batchId, [v.issueKey], accumulated(v.issueKey, notes));
+    deps.enqueue(batchId, [v.issueKey], accumulated(v, notes));
   }
 
   return {

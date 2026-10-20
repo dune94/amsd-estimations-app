@@ -84,4 +84,20 @@ describe('review page', () => {
     expect(html).toContain('action="/review/K-1/use-legacy"');
     expect(html).toContain('timeout');
   });
+
+  it('lists stories that have no estimate yet with their state and failure reason, escaped', () => {
+    const items = [
+      { issueKey: 'K-2', state: 'QUEUED' as const, notes: null },
+      { issueKey: 'K-3', state: 'FAILED' as const, notes: '<b>engine</b> failed' },
+      { issueKey: 'K-4', state: 'RUNNING' as const, notes: null },
+      { issueKey: 'K-1', state: 'DONE' as const, notes: null },
+    ];
+    const html = renderReviewPage('b_1', [row()], items);
+    expect(html).toContain('K-2'); expect(html).toContain('QUEUED');
+    expect(html).toContain('K-3'); expect(html).toContain('FAILED');
+    expect(html).toContain('&lt;b&gt;engine&lt;/b&gt; failed');
+    expect(html).toContain('K-4'); expect(html).toContain('RUNNING');
+    expect(html).not.toContain('<b>engine</b>');
+    expect(html.match(/id="waiting-K-1"/)).toBeNull();
+  });
 });

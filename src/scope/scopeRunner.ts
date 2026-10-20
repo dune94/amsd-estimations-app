@@ -4,7 +4,7 @@
 
 import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
 export interface PertBlock {
   o_br: number; m_br: number; p_br: number; expected_br: number;
@@ -87,21 +87,24 @@ export function createScopeRunner(opts: ScopeRunnerOptions): ScopeRunner {
 
   return {
     async buildPack(key, dir) {
-      const { cmd, args } = command([key, '--build-pack', dir]);
+      const { cmd, args } = command([key, '--build-pack', resolve(dir)]);
       const f = await exec(cmd, args, opts.scopeHome, opts.timeoutMs);
       if (f.timedOut || f.code !== 0) return { error: failure(f) };
       const packPath = lastLine(f.stdout, 'pack:');
-      return packPath ? { packPath } : { error: 'the scope engine did not report a pack path' };
+      return packPath ? { packPath: resolve(opts.scopeHome, packPath) } : { error: 'the scope engine did not report a pack path' };
     },
 
     async run(key, packPath) {
-      const { cmd, args } = command([key, '--run', '--story-pack', packPath]);
+      const { cmd, args } = command([key, '--run', '--story-pack', resolve(packPath)]);
       const f = await exec(cmd, args, opts.scopeHome, opts.timeoutMs);
       if (f.timedOut || f.code !== 0) return { ok: false, reason: failure(f) };
-      const resultPath = lastLine(f.stdout, 'result:');
-      if (!resultPath) return { ok: false, reason: 'the scope engine did not report a result path' };
+      const reported = lastLine(f.stdout, 'result:');
+      if (!reported) return { ok: false, reason: 'the scope engine did not report a result path' };
+      const resultPath = resolve(opts.scopeHome, reported);
       try {
-        return { ok: true, result: parseScopeResult(JSON.parse(readFileSync(resultPath, 'utf8'))), resultPath };
+        const result = parseScopeResult(JSON.parse(readFileSync(resultPath, 'utf8')));
+        if (typeof result.error === 'string' && result.error) return { ok: false, reason: result.error };
+        return { ok: true, result, resultPath };
       } catch (err) {
         return { ok: false, reason: err instanceof Error ? err.message : String(err) };
       }

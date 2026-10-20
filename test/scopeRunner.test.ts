@@ -25,6 +25,7 @@ beforeEach(() => {
 
 afterEach(() => {
   delete process.env.FAKE_MODE;
+  delete process.env.FAKE_RELPACK;
 });
 
 describe('parseScopeResult', () => {
@@ -98,5 +99,18 @@ describe('scope runner', () => {
     for (const l of lines) expect(l.startsWith('--want 1024 -- ')).toBe(true);
     expect(lines[0]).toContain('--build-pack');
     expect(lines[1]).toContain('--run --story-pack');
+  });
+
+  it('is not ok, with the engine error as the reason, when the result records an error', async () => {
+    process.env.FAKE_MODE = 'errorresult';
+    const out = await runner().run('KEY-1', join(home, 'pack.json'));
+    expect(out.ok).toBe(false);
+    if (!out.ok) expect(out.reason).toBe('RuntimeError: drivers agent returned no JSON');
+  });
+
+  it('resolves a relative pack path against the engine folder, where the engine ran', async () => {
+    process.env.FAKE_RELPACK = '1';
+    const out = await runner().buildPack('KEY-1', 'work/KEY-1');
+    expect(out).toEqual({ packPath: join(home, 'rel', 'pack.json') });
   });
 });

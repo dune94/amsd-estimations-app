@@ -3,7 +3,7 @@
 // drivers with their quotes, inputs that were not read, the baselines it is compared to, the version history, and the
 // review actions as plain forms. Pure function; every interpolated value is HTML-escaped.
 
-import type { EstimateVersion } from '../db/reviewStore.js';
+import type { BatchItem, EstimateVersion } from '../db/reviewStore.js';
 
 export interface ReviewRow { version: EstimateVersion; history: EstimateVersion[] }
 
@@ -74,7 +74,16 @@ function card(row: ReviewRow): string {
   return `<section class="story" id="${key}"><h2>${key} <span class="st">${esc(v.status)}</span> <small>version ${esc(v.version)}</small></h2>${body.join('')}<div class="actions">${forms.join('')}</div></section>`;
 }
 
-export function renderReviewPage(batchId: string, rows: ReviewRow[]): string {
+/** Stories of the batch with no estimate to show yet (queued, running) or none to show at all (failed), with the reason. */
+function waiting(items: BatchItem[], rows: ReviewRow[]): string {
+  const shown = new Set(rows.map(r => r.version.issueKey));
+  const open = items.filter(i => (i.state === 'QUEUED' || i.state === 'RUNNING' || i.state === 'FAILED') && !(i.state !== 'FAILED' && shown.has(i.issueKey)));
+  if (open.length === 0) return '';
+  return `<section class="story"><h2>Not estimated yet</h2><ul>${open.map(i =>
+    `<li id="waiting-${esc(i.issueKey)}">${esc(i.issueKey)} <span class="st">${esc(i.state)}</span>${i.state === 'FAILED' && i.notes ? ` &mdash; ${esc(i.notes)}` : ''}</li>`).join('')}</ul></section>`;
+}
+
+export function renderReviewPage(batchId: string, rows: ReviewRow[], items: BatchItem[] = []): string {
   const b = esc(batchId);
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Review ${b}</title><style>
@@ -86,6 +95,6 @@ blockquote{margin:2px 0 6px 12px;color:#4a5560}table{border-collapse:collapse;wi
 </style></head><body><h1>Batch ${b}</h1>
 <div class="actions"><form method="post" action="/batches/${b}/accept-high"><button>Accept all High-confidence stories</button></form>
 <form method="post" action="/batches/${b}/send-back"><textarea name="notes" rows="2" placeholder="Notes for the whole batch" required></textarea><button>Send the whole batch back</button></form></div>
-${rows.length ? rows.map(card).join('') : '<p>No estimates yet; the batch is still running.</p>'}
+${waiting(items, rows)}${rows.length ? rows.map(card).join('') : '<p>No estimates yet; the batch is still running.</p>'}
 </body></html>`;
 }

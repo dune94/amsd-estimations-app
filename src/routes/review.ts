@@ -61,7 +61,7 @@ export function registerReviewRoutes(app: FastifyInstance, deps: ReviewRouteDeps
     if (store.batchItems(req.params.batchId).length === 0) { reply.code(404); return { error: 'unknown batch' }; }
     const rows = store.listBatchLatest(req.params.batchId).map(v => ({ version: v, history: store.listVersions(v.issueKey) }));
     reply.type('text/html; charset=utf-8');
-    return renderReviewPage(req.params.batchId, rows);
+    return renderReviewPage(req.params.batchId, rows, store.batchItems(req.params.batchId));
   });
 
   const batchOfKey = (key: string) => store.getVersion(key)?.batchId;

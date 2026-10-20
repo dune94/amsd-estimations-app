@@ -93,4 +93,12 @@ describe('batch worker', () => {
     expect(w.progress(b)).toEqual({ total: 3, queued: 0, done: 2, failed: 1, running: null });
     expect(w.progress('b_unknown').total).toBe(0);
   });
+
+  it('refuses keys that are not issue keys', () => {
+    const w = worker();
+    for (const bad of ['../x', 'K-1;rm', 'k-1', 'K-', '-1', 'K 1', 'K-1/../..', '']) {
+      expect(() => w.createBatch([bad], 'keys'), bad).toThrow(ValidationError);
+    }
+    expect(() => w.createBatch(['AB_C-12'], 'keys')).not.toThrow();
+  });
 });

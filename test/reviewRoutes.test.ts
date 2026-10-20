@@ -59,6 +59,22 @@ describe('batches', () => {
     expect((await post('/batches', { keys: ['A', 'B', 'C', 'D'] })).statusCode).toBe(400);
   });
 
+  it('rejects keys that are not issue keys with 400', async () => {
+    expect((await post('/batches', { keys: ['../x'] })).statusCode).toBe(400);
+    expect((await post('/batches', { keys: ['K-1;ls'] })).statusCode).toBe(400);
+  });
+
+  it('shows queued and failed stories on the review page with the reason', async () => {
+    const res = await post('/batches', { keys: ['K-1'] });
+    const { batchId } = res.json();
+    store.setItemState(batchId, 'K-1', 'FAILED', 'engine <exploded>');
+    await worker.idle();
+    const page = await app.inject({ method: 'GET', url: `/review/${batchId}` });
+    expect(page.body).toContain('K-1');
+    expect(page.body).toContain('FAILED');
+    expect(page.body).toContain('engine &lt;exploded&gt;');
+  });
+
   it('takes the stories from a JQL query', async () => {
     const res = await post('/batches', { jql: 'project = KEY' });
     expect(res.statusCode).toBe(202);

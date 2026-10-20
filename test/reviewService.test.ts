@@ -77,6 +77,26 @@ describe('send back', () => {
     expect(calls[1].notes).toContain('second');
   });
 
+  it('does not compound earlier notes: three send-backs give A, A+B, A+B+C', () => {
+    add('K-1');
+    svc.sendBack('K-1', 'A');
+    add('K-1', { notes: calls[0].notes });
+    svc.sendBack('K-1', 'B');
+    add('K-1', { notes: calls[1].notes });
+    svc.sendBack('K-1', 'C');
+    expect(calls.map(c => c.notes)).toEqual(['A', 'A\n\nB', 'A\n\nB\n\nC']);
+  });
+
+  it('keeps the newest notes when the total is over the limit', () => {
+    add('K-1');
+    svc.sendBack('K-1', 'a'.repeat(30));
+    add('K-1', { notes: calls[0].notes });
+    svc.sendBack('K-1', 'b'.repeat(30));
+    const sent = calls[1].notes!;
+    expect(sent.length).toBeLessThanOrEqual(50);
+    expect(sent.endsWith('b'.repeat(30))).toBe(true);
+  });
+
   it('conflicts on an accepted story', () => {
     add('K-1');
     svc.accept('K-1');

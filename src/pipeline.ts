@@ -2,6 +2,7 @@
 // Builds the formula pipeline (scope runner, estimator, review store, worker, review service) from the environment.
 // Returns null when SCOPE_HOME is not set: the app then behaves exactly as the legacy engine always did.
 
+import { resolve } from 'node:path';
 import type { JiraClient } from './clients/types.js';
 import { baselineStories, confidenceConfig } from './config/index.js';
 import type { EstimatesDb } from './db/index.js';
@@ -17,6 +18,9 @@ import { createReviewService, type ReviewService } from './service/reviewService
 
 export interface Pipeline { worker: BatchWorker; review: ReviewService; store: ReviewStore; formula: FormulaHooks; outputs: Outputs }
 
+/** The engine runs in its own folder, so the folder the app hands it must not depend on the app's working directory. */
+export const resolveWorkDir = (env: NodeJS.ProcessEnv): string => resolve(env.SCOPE_WORK_DIR || './data/work');
+
 export function buildPipeline(deps: { env: NodeJS.ProcessEnv; jira: JiraClient; estimation: EstimationService; db: EstimatesDb }): Pipeline | null {
   const { env } = deps;
   if (!env.SCOPE_HOME) return null;
@@ -31,14 +35,14 @@ export function buildPipeline(deps: { env: NodeJS.ProcessEnv; jira: JiraClient; 
   });
   const estimator = createFormulaEstimator({
     jira: deps.jira, scope, store, baselines: baselineStories, confidenceCfg: confidenceConfig,
-    workDir: env.SCOPE_WORK_DIR || './data/work', maxNotesChars,
+    workDir: resolveWorkDir(env), maxNotesChars,
   });
   const worker = createBatchWorker({ store, estimator, maxBatchSize: num(env.MAX_BATCH_SIZE, 25) });
   const review = createReviewService({
     store, maxNotesChars, enqueue: (batchId, keys, notes) => worker.enqueue(batchId, keys, notes),
     legacyEstimate: async key => {
       const result = await deps.estimation.runEstimate(key);
-      return store.addVersion({ issueKey: key, batchId: null, mode: 'legacy', noCodeFacts: false, storyHash: null, estimate: result, notes: null });
+      return store.addVersion({ issueKey: key, batchId: store.getVersion(key)?.batchId ?? null, mode: 'legacy', noCodeFacts: false, storyHash: null, estimate: result, notes: null });
     },
   });
   const formula: FormulaHooks = {
