@@ -1,9 +1,16 @@
 // ── Routes ───────────────────────────────────────────────────────────────────
 
 import type { FastifyInstance } from 'fastify';
+import { resolveMode } from '../config/mode.js';
 import type { EstimationService } from '../service/estimationService.js';
 
-export function registerRoutes(app: FastifyInstance, service: EstimationService): void {
+/** Present only when the formula pipeline is configured; `mode: "formula"` requests then create a batch instead of an inline estimate. */
+export interface FormulaHooks {
+  createBatch(keys: string[], source: string): string;
+  searchKeys(jql: string): Promise<string[]>;
+}
+
+export function registerRoutes(app: FastifyInstance, service: EstimationService, formula?: FormulaHooks): void {
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
 
   app.get<{ Querystring: { limit?: string } }>('/estimates', async (req) => {
@@ -20,10 +27,15 @@ export function registerRoutes(app: FastifyInstance, service: EstimationService)
     return result;
   });
 
-  app.post<{ Params: { issueKey: string }; Body: { writeBack?: boolean; withLlm?: boolean } }>(
+  app.post<{ Params: { issueKey: string }; Body: { writeBack?: boolean; withLlm?: boolean; mode?: string } }>(
     '/estimates/:issueKey/recompute',
     async (req, reply) => {
       try {
+        if (resolveMode(req.body?.mode) === 'formula') {
+          if (!formula) throw new Error('formula mode is not configured (set SCOPE_HOME)');
+          reply.code(202);
+          return { batchId: formula.createBatch([req.params.issueKey], 'recompute') };
+        }
         const result = await service.runEstimate(req.params.issueKey, {
           writeBack: req.body?.writeBack ?? false,
           withLlm: req.body?.withLlm ?? false,
@@ -36,10 +48,20 @@ export function registerRoutes(app: FastifyInstance, service: EstimationService)
     },
   );
 
-  app.post<{ Body: { jql: string; writeBack?: boolean; withLlm?: boolean } }>('/estimates/batch', async (req, reply) => {
+  app.post<{ Body: { jql: string; writeBack?: boolean; withLlm?: boolean; mode?: string } }>('/estimates/batch', async (req, reply) => {
     if (!req.body?.jql) {
       reply.code(400);
       return { error: 'Request body must include "jql"' };
+    }
+    try {
+      if (resolveMode(req.body.mode) === 'formula') {
+        if (!formula) throw new Error('formula mode is not configured (set SCOPE_HOME)');
+        reply.code(202);
+        return { batchId: formula.createBatch(await formula.searchKeys(req.body.jql), 'jql') };
+      }
+    } catch (err) {
+      reply.code(400);
+      return { error: err instanceof Error ? err.message : String(err) };
     }
     const results = await service.runBatch(req.body.jql, {
       writeBack: req.body.writeBack ?? false,

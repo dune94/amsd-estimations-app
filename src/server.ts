@@ -7,6 +7,8 @@ import { createConfluenceClient, createJiraClient } from './clients/index.js';
 import { openDb } from './db/index.js';
 import { createAnthropicLlmEstimator, createClaudeCliLlmEstimator, type LlmEstimator } from './engine/llmEngine.js';
 import { registerRoutes } from './routes/index.js';
+import { registerReviewRoutes } from './routes/review.js';
+import { buildPipeline } from './pipeline.js';
 import { createEstimationService } from './service/estimationService.js';
 
 const PORT = Number(process.env.PORT ?? 3000);
@@ -37,7 +39,12 @@ async function main() {
   const llmEstimator = resolveLlmEstimator();
   const service = createEstimationService(jira, confluence, db, llmEstimator);
 
-  registerRoutes(app, service);
+  const pipeline = buildPipeline({ env: process.env, jira, estimation: service, db });
+  registerRoutes(app, service, pipeline?.formula);
+  if (pipeline) {
+    registerReviewRoutes(app, { worker: pipeline.worker, review: pipeline.review, store: pipeline.store, jira });
+    pipeline.worker.start(); // resumes any batch interrupted by a restart
+  }
 
   await app.listen({ port: PORT, host: '0.0.0.0' });
   app.log.info(
