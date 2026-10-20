@@ -10,8 +10,8 @@ fi
 case "${FAKE_MODE:-ok}" in
   exit2) echo "boom: engine failed" >&2; exit 2 ;;
   slow) echo $$ > "$FAKE_PIDFILE"; sleep 30 ;;
-  badversion) out="$(dirname "$FAKE_RESULT")/bad-result.json"; sed 's/"schema_version": *1/"schema_version": 2/' "$FAKE_RESULT" > "$out"; echo "result: $out" ;;
-  errorresult) out="$(dirname "$FAKE_RESULT")/error-result.json"; sed 's/"schema_version": *1,/"schema_version": 1, "error": "RuntimeError: drivers agent returned no JSON",/' "$FAKE_RESULT" > "$out"; echo "result: $out" ;;
-  noversion) out="$(dirname "$FAKE_RESULT")/no-version.json"; sed '/"schema_version"/d' "$FAKE_RESULT" > "$out"; echo "result: $out" ;;
+  badversion) out="$(dirname "$FAKE_LOG")/bad-result.json"; sed 's/"schema_version": *1/"schema_version": 2/' "$FAKE_RESULT" > "$out"; echo "result: $out" ;;
+  errorresult) out="$(dirname "$FAKE_LOG")/error-result.json"; sed 's/"schema_version": *1,/"schema_version": 1, "error": "RuntimeError: drivers agent returned no JSON",/' "$FAKE_RESULT" > "$out"; echo "result: $out" ;;
+  noversion) out="$(dirname "$FAKE_LOG")/no-version.json"; sed '/"schema_version"/d' "$FAKE_RESULT" > "$out"; echo "result: $out" ;;
   *) echo "result: $FAKE_RESULT" ;;
 esac
