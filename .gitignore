@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.log
+.env
+data/*.sqlite
+data/*.sqlite-journal
+coverage/
+config.local/
+.codegraph/
+generated_artifacts/
+data/
+*.bak
+*.bak-*
+.pytest_cache/

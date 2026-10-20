@@ -1,0 +1,31 @@
+{
+  "name": "estimations-app",
+  "version": "0.1.0",
+  "description": "Deterministic PI-planning story-point estimation API, with Jira webhook trigger and Confluence write-back. Non-LLM v1.",
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && mkdir -p dist/config && cp src/config/*.json dist/config/",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "export-html": "tsx src/scripts/exportHtml.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.111.0",
+    "better-sqlite3": "^11.3.0",
+    "dotenv": "^16.4.5",
+    "fastify": "^4.28.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/node": "^20.14.10",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3",
+    "vitest": "^2.0.5"
+  }
+}

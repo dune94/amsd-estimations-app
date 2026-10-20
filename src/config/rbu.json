@@ -1,0 +1,29 @@
+{
+  "_doc": "Requesting-unit category mapping and monthly SP targets. Neutral sample; the real mapping goes in config.local/rbu.json (untracked), which replaces this file.",
+  "jiraField": "customfield_10669",
+  "categories": {
+    "Marketing": {
+      "percent": 45,
+      "rbuValues": [
+        "Unit A1",
+        "Unit A2"
+      ]
+    },
+    "Operations": {
+      "percent": 35,
+      "rbuValues": [
+        "Unit B1",
+        null,
+        ""
+      ]
+    },
+    "Community Engagement": {
+      "percent": 20,
+      "rbuValues": [
+        "Unit C1",
+        "Unit C2"
+      ]
+    }
+  },
+  "monthlyContractTotalSp": 125
+}

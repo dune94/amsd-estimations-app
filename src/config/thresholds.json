@@ -1,0 +1,23 @@
+{
+  "_doc": "Tunable thresholds for the deterministic PERT engine and escalation classifier. Harvested from pi-estimation-api/manifest.md 'Convergence Rule' and 'Escalation Classifier' sections.",
+  "convergenceGapThresholdPct": 15,
+  "escalation": {
+    "wideDivergenceThresholdPct": 15,
+    "minHistoricalCompsForConfidence": 1,
+    "acAmbiguityVagueTerms": ["fast", "scalable", "secure", "robust", "seamless", "user-friendly", "efficient", "flexible"]
+  },
+  "openSpecLens": {
+    "tierScalingFactorPerStep": 1.4,
+    "_doc": "Nearest-neighbor baseline SP is scaled up/down by this factor per effort-tier step of difference between the issue and its matched baseline (Easy=0, Medium=1, Hard=2)."
+  },
+  "brownfieldLens": {
+    "pessimisticMultiplierByTier": { "Easy": 1.3, "Medium": 1.6, "Hard": 2.0 },
+    "brownfieldLabelRiskDeltaSp": 2,
+    "_doc": "Pessimistic (P) = mostLikely(M) * tier multiplier, plus a flat SP delta per matched brownfield-risk label (legacy/tech-debt/deprecated/brownfield)."
+  },
+  "specKitLens": {
+    "perAcSp": 1.5,
+    "tierFloorSp": { "Easy": 1, "Medium": 4, "Hard": 8 },
+    "_doc": "Optimistic (O): if sub-task SP estimates exist, sum them (ground truth). Otherwise proxy = max(tierFloor, acceptanceCriteria.length * perAcSp)."
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "_doc": "Story-points source fallback chain, in priority order. Configured conversion. Used to determine the PREVIOUS/EXISTING SP for delta reporting, and as an input signal (not a replacement) for the deterministic estimator.",
+  "priority": [
+    {
+      "priority": 1,
+      "source": "PI-10 Plan page baseline",
+      "jiraField": null,
+      "description": "Planned SP scraped from a Confluence baseline page. Authoritative when the issue is part of a captured baseline set. Not generally available for net-new issues outside that baseline."
+    },
+    {
+      "priority": 2,
+      "source": "Original Estimate",
+      "jiraField": "customfield_10410",
+      "description": "Use for issues added to scope after a baseline was captured."
+    },
+    {
+      "priority": 3,
+      "source": "T-Shirt Size conversion",
+      "jiraField": "customfield_10409",
+      "description": "Use when Original Estimate is null. Convert using tshirt-to-sp.json."
+    },
+    {
+      "priority": 4,
+      "source": "Story Points",
+      "jiraField": "customfield_10052",
+      "description": "Last resort fallback only. Note: customfield_10016 is NULL for all tickets in this workspace — do not rely on it."
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "_doc": "T-shirt size -> Story Points conversion. Configured conversion.",
+  "XS": 1,
+  "S": 6,
+  "M": 14,
+  "L": 24,
+  "XL": 36
+}

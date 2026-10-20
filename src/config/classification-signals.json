@@ -1,0 +1,9 @@
+{
+  "_doc": "Label keyword sets used by the deterministic effort classifier to detect Hard-tier signals from Jira issue labels. Organisation-specific labels go in config.local/classification-signals.json (untracked), which replaces this file.",
+  "spikeLabels": ["spike", "poc", "research", "investigation"],
+  "newServiceLabels": ["new-service", "new-package", "greenfield", "net-new"],
+  "crossTeamLabels": ["cross-team", "icc", "vendor", "third-party", "external-dependency"],
+  "noPriorExperienceLabels": ["novel", "unfamiliar", "first-time"],
+  "brownfieldRiskLabels": ["brownfield", "legacy", "tech-debt", "deprecated"],
+  "externalDependencyLabels": ["external-dependency", "vendor", "third-party", "connect-api"]
+}

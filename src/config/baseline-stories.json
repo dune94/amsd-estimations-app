@@ -1,0 +1,76 @@
+{
+  "_doc": "Neutral sample calibration stories. Real ones go in config.local/baseline-stories.json (untracked), which replaces this file. Used by the deterministic OpenSpec lens (nearest neighbour on signals) and listed in the LLM prompt as reference anchors.",
+  "generated": "sample",
+  "stories": [
+    {
+      "key": "PRJ-101",
+      "tshirt": "XS",
+      "sp": 1.0,
+      "pi": "PI-X",
+      "rbu": "Unit A",
+      "description": "Change a configuration value",
+      "signals": {
+        "issueType": "Story",
+        "externalDependency": false,
+        "filesImpacted": 1,
+        "newComponent": false
+      }
+    },
+    {
+      "key": "PRJ-102",
+      "tshirt": "S",
+      "sp": 3.0,
+      "pi": "PI-X",
+      "rbu": "Unit A",
+      "description": "Update copy on an existing page",
+      "signals": {
+        "issueType": "Story",
+        "externalDependency": false,
+        "filesImpacted": 2,
+        "newComponent": false
+      }
+    },
+    {
+      "key": "PRJ-103",
+      "tshirt": "M",
+      "sp": 8.0,
+      "pi": "PI-X",
+      "rbu": "Unit B",
+      "description": "Add a form step with validation",
+      "signals": {
+        "issueType": "Story",
+        "externalDependency": false,
+        "filesImpacted": 6,
+        "newComponent": true
+      }
+    },
+    {
+      "key": "PRJ-104",
+      "tshirt": "L",
+      "sp": 13.0,
+      "pi": "PI-X",
+      "rbu": "Unit B",
+      "description": "Integrate a third-party API",
+      "signals": {
+        "issueType": "Story",
+        "externalDependency": true,
+        "filesImpacted": 12,
+        "newComponent": true
+      }
+    },
+    {
+      "key": "PRJ-105",
+      "tshirt": "XL",
+      "sp": 21.0,
+      "pi": "PI-X",
+      "rbu": "Unit C",
+      "description": "New multi-page flow with data migration",
+      "signals": {
+        "issueType": "Story",
+        "externalDependency": true,
+        "filesImpacted": 25,
+        "newComponent": true
+      }
+    }
+  ]
+}

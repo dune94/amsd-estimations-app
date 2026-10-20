@@ -1,0 +1,10 @@
+{
+  "_doc": "T-shirt size SCALE (ranges) used to classify a computed PERT SP value into a display T-shirt label. Distinct from tshirt-to-sp.json, which converts an EXISTING Jira T-Shirt field value into an SP number for the sp-field-priority fallback chain. Harvested from the Estimations Agent spec (pi-estimation-api/manifest.md).",
+  "scale": [
+    { "tshirt": "XS", "minSp": 0, "maxSp": 1, "description": "Trivial: config, copy, single-line fix" },
+    { "tshirt": "S", "minSp": 2, "maxSp": 6, "description": "Well-understood, minimal risk, no external deps" },
+    { "tshirt": "M", "minSp": 7, "maxSp": 14, "description": "Moderate complexity, some ambiguity, possible integrations" },
+    { "tshirt": "L", "minSp": 15, "maxSp": 24, "description": "High complexity, multi-system, spike may be needed" },
+    { "tshirt": "XL", "minSp": 25, "maxSp": 40, "description": "Unclear scope, architectural change, major unknowns" }
+  ]
+}

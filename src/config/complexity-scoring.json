@@ -1,0 +1,52 @@
+{
+  "_doc": "PI-12 complexity scoring (deck 'PI-12 Estimation - Time to Complexity' v3.9, slide 3; manifest ESTIMATION-ALIGNMENT-MANIFEST.md). Rate Complexity / Amount of Work / Risk Low-Medium-High, add the points, read story points from the band table. Familiarity (first time for the team) is rated under Risk only. Bands changed 2026-10-18 (Bradley): the total goes to the closest story point value on 1/2/3/5/8/13; a tie (4) goes up. Never rounds down.",
+  "points": {
+    "complexity": {
+      "L": 0,
+      "M": 2,
+      "H": 4
+    },
+    "work": {
+      "L": 0,
+      "M": 4,
+      "H": 8
+    },
+    "risk": {
+      "L": 0,
+      "M": 1,
+      "H": 3
+    }
+  },
+  "bands": [
+    {
+      "min": 0,
+      "max": 1,
+      "sp": 1
+    },
+    {
+      "min": 2,
+      "max": 2,
+      "sp": 2
+    },
+    {
+      "min": 3,
+      "max": 3,
+      "sp": 3
+    },
+    {
+      "min": 4,
+      "max": 6,
+      "sp": 5
+    },
+    {
+      "min": 7,
+      "max": 10,
+      "sp": 8
+    },
+    {
+      "min": 11,
+      "max": 15,
+      "sp": 13
+    }
+  ]
+}
